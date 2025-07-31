@@ -69,5 +69,5 @@ jobs:
         run: |
 
           git add version.txt
-          git commit -m "chore(release): ${{ steps.commit_message.outputs.description }} ${{ steps.increment_version.outputs.new_version }}"
+          git commit -m "chore(release): ${{ steps.increment_version.outputs.description }} ${{ steps.increment_version.outputs.new_version }}"
           git push
