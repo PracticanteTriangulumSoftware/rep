@@ -1,0 +1,58 @@
+name: Actualizar Versión
+
+on:
+  push:
+    branches:
+      - main # o la rama que necesites
+
+jobs:
+  update-version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      - name: Obtener el mensaje del commit
+        id: commit_message
+        run: |
+          commit_msg=$(git log -1 --pretty=%B)
+          echo "message=$commit_msg" >> $GITHUB_OUTPUT
+
+      - name: Incrementar la versión
+        id: increment_version
+        run: |
+          # Aquí va tu lógica para modificar el archivo de versión
+          # Este es un ejemplo simple, debes adaptarlo a tu caso
+          VERSION_FILE="version.txt"
+          current_version=$(cat $VERSION_FILE)
+
+          echo "Versión actual: $current_version"
+
+          if [[ "${{ steps.commit_message.outputs.message }}" == *"feat"* ]]; then
+            # Lógica para incrementar la versión mayor
+            new_version=$(echo $current_version | awk -F. '{$1++; $2=0; $3=0; print}' OFS=.)
+          elif [[ "${{ steps.commit_message.outputs.message }}" == *"improve"* ]]; then
+            # Lógica para incrementar la versión menor
+            new_version=$(echo $current_version | awk -F. '{$2++; $3=0; print}' OFS=.)
+          elif [[ "${{ steps.commit_message.outputs.message }}" == *"patch"* ]]; then
+            # Lógica para incrementar la versión de parche
+            new_version=$(echo $current_version | awk -F. '{$3++; print}' OFS=.)
+          else
+            echo "El mensaje de commit no contiene 'major', 'minor' o 'patch'. No se modificará la versión."
+            exit 0 # Salimos del job sin error
+          fi
+
+          echo "Nueva versión: $new_version"
+          echo "$new_version" > $VERSION_FILE
+          echo "new_version=$new_version" >> $GITHUB_OUTPUT
+
+      - name: Configurar Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Crear un nuevo commit con la versión actualizada
+        run: |
+          git add version.txt
+          git commit -m "chore(release): Actualizar a la versión ${{ steps.increment_version.outputs.new_version }}"
+          git push
