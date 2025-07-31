@@ -56,6 +56,8 @@ jobs:
             description="$full_message"
           fi
 
+          echo "$description"
+
           echo "description=$description" >> $GITHUB_OUTPUT
 
       - name: Configurar Git
