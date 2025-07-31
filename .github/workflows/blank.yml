@@ -53,7 +53,7 @@ jobs:
 
       - name: Crear un nuevo commit con la versión actualizada
         run: |
-          first = "${{ steps.commit_message.outputs.message }}"
+          first="${{ steps.commit_message.outputs.message }}"
           first=$($first | awk -F'[:-]' '{print $2}')
           git add version.txt
           git commit -m "chore(release): $first ${{ steps.increment_version.outputs.new_version }}"
