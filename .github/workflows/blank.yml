@@ -46,6 +46,18 @@ jobs:
           echo "$new_version" > $VERSION_FILE
           echo "new_version=$new_version" >> $GITHUB_OUTPUT
 
+          full_message=$(git log -1 --pretty=%B)
+
+          # Extrae la parte después de los dos puntos (:)
+          description=$(echo "$full_message" | sed -n 's/^[^:]*:\(.*\)/\1/p' | sed 's/^[[:space:]]*//')
+
+          # Si no hay ':' en el mensaje, usa el mensaje completo
+          if [ -z "$description" ]; then
+            description="$full_message"
+          fi
+
+          echo "description=$description" >> $GITHUB_OUTPUT
+
       - name: Configurar Git
         run: |
           git config user.name "github-actions[bot]"
@@ -53,8 +65,7 @@ jobs:
 
       - name: Crear un nuevo commit con la versión actualizada
         run: |
-          first="${{ steps.commit_message.outputs.message }}"
-          first=$($first | awk -F'[:-]' '{print $2}')
+
           git add version.txt
-          git commit -m "chore(release): $first ${{ steps.increment_version.outputs.new_version }}"
+          git commit -m "chore(release): ${{ steps.commit_message.outputs.description }} ${{ steps.increment_version.outputs.new_version }}"
           git push
