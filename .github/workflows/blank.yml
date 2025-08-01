@@ -23,10 +23,16 @@ jobs:
         run: |
           # Aquí va tu lógica para modificar el archivo de versión
           # Este es un ejemplo simple, debes adaptarlo a tu caso
-          VERSION_FILE="version.txt"
-          current_version=$(cat $VERSION_FILE)
-
-          echo "Versión actual: $current_version"
+          VERSION_DIR="version"
+          VERSION_FILE="$VERSION_DIR/version.txt"
+      
+          # Crear carpeta si no existe
+          mkdir -p "$VERSION_DIR"
+      
+          # Crear archivo con versión base si no existe
+          if [ ! -f "$VERSION_FILE" ]; then
+            echo "0.0.0" > "$VERSION_FILE"
+          fi
 
           if [[ "${{ steps.commit_message.outputs.message }}" == *"feat"* ]]; then
             # Lógica para incrementar la versión mayor
