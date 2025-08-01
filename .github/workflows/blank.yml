@@ -3,7 +3,7 @@ name: Actualizar Versión
 on:
   push:
     branches:
-      - main # o la rama que necesites
+      - main #rama en la que trabajara el workflow
 
 jobs:
   update-version:
@@ -15,15 +15,18 @@ jobs:
       - name: Obtener el mensaje del commit
         id: commit_message
         run: |
+          #  obtener mensaje del commit realizado
           commit_msg=$(git log -1 --pretty=%B)
           echo "message=$commit_msg" >> $GITHUB_OUTPUT
 
       - name: Incrementar la versión
         id: increment_version
         run: |
-          # Aquí va tu lógica para modificar el archivo de versión
-          # Este es un ejemplo simple, debes adaptarlo a tu caso
+          
+          # establecer directorio del archivo de versión
           VERSION_DIR="version"
+
+          # establecer el nombre del archivo de versión
           VERSION_FILE="$VERSION_DIR/version.txt"
       
           # Crear carpeta si no existe
@@ -33,28 +36,45 @@ jobs:
           if [ ! -f "$VERSION_FILE" ]; then
             echo "0.0.0" > "$VERSION_FILE"
           fi
-          
+
+          # Obtener versión actual almacenada en el archivo
           current_version=$(cat "$VERSION_FILE")
+
+          # Mostrar nueva versión en el ejecutor de acciones
           echo "Versión actual: $current_version"
 
+          # Si contiene la palabra "feat"
           if [[ "${{ steps.commit_message.outputs.message }}" == *"feat"* ]]; then
-            # Lógica para incrementar la versión mayor
+            # Incrementar versión para nuevo módulo
             new_version=$(echo $current_version | awk -F. '{$1++; $2=0; $3=0; print}' OFS=.)
+            
+          # Si contiene la palabra "improve"
           elif [[ "${{ steps.commit_message.outputs.message }}" == *"improve"* ]]; then
-            # Lógica para incrementar la versión menor
+            # Incrementar versión para nueva función interna dentro de módulo existente
             new_version=$(echo $current_version | awk -F. '{$2++; $3=0; print}' OFS=.)
+
+          # Si contiene la palabra "patch"
           elif [[ "${{ steps.commit_message.outputs.message }}" == *"patch"* ]]; then
-            # Lógica para incrementar la versión de parche
+            # Incrementar versión para corrección dentro de módulo existente
             new_version=$(echo $current_version | awk -F. '{$3++; print}' OFS=.)
+
+          # Si no contiene ninguna de las palabras anteriores
           else
+            # Si no contiene ningún tipo de diferenciador no realiza ningún aumento de versión
             echo "El mensaje de commit no contiene 'major', 'minor' o 'patch'. No se modificará la versión."
-            exit 0 # Salimos del job sin error
+            exit 0 # Salir del workflow
           fi
 
+          # Mostrar nueva versión en el ejecutor de acciones
           echo "Nueva versión: $new_version"
+
+          # Guardar la nueva versión en el archivo de versiones
           echo "$new_version" > $VERSION_FILE
+
+          # Colocar la nueva versión como parte de las salidas del workflow
           echo "new_version=$new_version" >> $GITHUB_OUTPUT
 
+          # Obtener mensaje del commit
           full_message=$(git log -1 --pretty=%B)
 
           # Extrae la parte después de los dos puntos (:)
@@ -65,18 +85,21 @@ jobs:
             description="$full_message"
           fi
 
+          # Mostrar mensaje en el ejecutor de acciones
           echo "$description"
 
+          #Colocar el mensaje como parte de las salidas de GitHub
           echo "description=$description" >> $GITHUB_OUTPUT
 
       - name: Configurar Git
         run: |
+          # Configurar el commit que se va a hacer para mantener la versión
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Crear un nuevo commit con la versión actualizada
         run: |
-
+          # Hacer push al guardado de la versión
           git add version/version.txt
           git commit -m "chore(release): ${{ steps.increment_version.outputs.description }} ${{ steps.increment_version.outputs.new_version }}"
           git push
