@@ -33,6 +33,9 @@ jobs:
           if [ ! -f "$VERSION_FILE" ]; then
             echo "0.0.0" > "$VERSION_FILE"
           fi
+          
+          current_version=$(cat "$VERSION_FILE")
+          echo "Versión actual: $current_version"
 
           if [[ "${{ steps.commit_message.outputs.message }}" == *"feat"* ]]; then
             # Lógica para incrementar la versión mayor
