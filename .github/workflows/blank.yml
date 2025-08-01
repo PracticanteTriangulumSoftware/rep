@@ -74,6 +74,6 @@ jobs:
       - name: Crear un nuevo commit con la versión actualizada
         run: |
 
-          git add version.txt
+          git add version/version.txt
           git commit -m "chore(release): ${{ steps.increment_version.outputs.description }} ${{ steps.increment_version.outputs.new_version }}"
           git push
